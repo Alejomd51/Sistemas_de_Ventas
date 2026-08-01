@@ -38,6 +38,10 @@ class Producto(models.Model):
     def precio_formateado(self):
         return f"{self.precio:.2f}"
 
+    @property
+    def stock_bajo(self):
+        return self.stock <= 5
+
     def __str__(self):
         return self.nombre
 

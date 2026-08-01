@@ -45,7 +45,12 @@
                         <td>{{ producto.nombre }}</td>
                         <td>{{ producto.categoria.nombre }}</td>
                         <td>{{ producto.precio_formateado }}</td>
-                        <td>{{ producto.stock }}</td>
+                        <td>
+                            {{ producto.stock }}
+                            {% if producto.stock_bajo %}
+                                <span style="color: #b91c1c; font-weight: bold;">⚠ Stock bajo</span>
+                            {% endif %}
+                        </td>
                         <td>{% if producto.activo %}Sí{% else %}No{% endif %}</td>
                         <td>
                             <a href="{% url 'usuarios:producto_editar' producto.pk %}">Editar</a>

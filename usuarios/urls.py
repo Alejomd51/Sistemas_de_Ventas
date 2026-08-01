@@ -20,4 +20,36 @@ urlpatterns = [
         auth_views.LogoutView.as_view(),
         name="logout",
     ),
+    path(
+        "recuperar-contrasena/",
+        auth_views.PasswordResetView.as_view(
+            template_name="usuarios/password_reset_form.html",
+            email_template_name="usuarios/password_reset_email.html",
+            subject_template_name="usuarios/password_reset_subject.txt",
+            success_url="/usuarios/recuperar-contrasena/enviado/",
+        ),
+        name="password_reset",
+    ),
+    path(
+        "recuperar-contrasena/enviado/",
+        auth_views.PasswordResetDoneView.as_view(
+            template_name="usuarios/password_reset_done.html"
+        ),
+        name="password_reset_done",
+    ),
+    path(
+        "restablecer/<uidb64>/<token>/",
+        auth_views.PasswordResetConfirmView.as_view(
+            template_name="usuarios/password_reset_confirm.html",
+            success_url="/usuarios/restablecer/completado/",
+        ),
+        name="password_reset_confirm",
+    ),
+    path(
+        "restablecer/completado/",
+        auth_views.PasswordResetCompleteView.as_view(
+            template_name="usuarios/password_reset_complete.html"
+        ),
+        name="password_reset_complete",
+    ),
 ]

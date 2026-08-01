@@ -1,5 +1,9 @@
-from django.test import TestCase
+from django.contrib.auth.tokens import default_token_generator
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 
 from .models import Usuario
 
@@ -135,3 +139,48 @@ class RestriccionPorRolTests(TestCase):
         response = self.client.get(reverse("usuarios:panel_vendedor"))
 
         self.assertEqual(response.status_code, 403)
+
+
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class RecuperacionContrasenaTests(TestCase):
+    def setUp(self):
+        self.usuario = Usuario.objects.create_user(
+            username="dilan",
+            email="dilan@example.com",
+            password="ClaveAnterior2026!",
+            rol=Usuario.Rol.VENDEDOR,
+        )
+
+    def test_envia_correo_de_recuperacion(self):
+        response = self.client.post(
+            reverse("usuarios:password_reset"),
+            {"email": self.usuario.email},
+        )
+
+        self.assertRedirects(response, reverse("usuarios:password_reset_done"))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Recuperación de contraseña", mail.outbox[0].subject)
+        self.assertIn("/usuarios/restablecer/", mail.outbox[0].body)
+
+    def test_token_valido_permite_cambiar_contrasena(self):
+        uid = urlsafe_base64_encode(force_bytes(self.usuario.pk))
+        token = default_token_generator.make_token(self.usuario)
+        url = reverse(
+            "usuarios:password_reset_confirm",
+            kwargs={"uidb64": uid, "token": token},
+        )
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(
+            response.url,
+            {
+                "new_password1": "ClaveNueva2026!",
+                "new_password2": "ClaveNueva2026!",
+            },
+        )
+
+        self.assertRedirects(response, reverse("usuarios:password_reset_complete"))
+        self.usuario.refresh_from_db()
+        self.assertTrue(self.usuario.check_password("ClaveNueva2026!"))

@@ -123,3 +123,7 @@ AUTH_USER_MODEL = 'usuarios.Usuario'
 LOGIN_URL = 'usuarios:login'
 LOGIN_REDIRECT_URL = 'usuarios:inicio'
 LOGOUT_REDIRECT_URL = 'usuarios:login'
+
+# Durante el desarrollo, los correos se muestran en la terminal.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'Sistema de Ventas <no-reply@sistema-ventas.local>'

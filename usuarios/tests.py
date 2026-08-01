@@ -5,7 +5,25 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from .models import Usuario
+from .models import Categoria, Producto, Usuario
+
+
+class ProductosTests(TestCase):
+    def test_crear_categoria_y_producto_con_relacion(self):
+        categoria = Categoria.objects.create(nombre="Bebidas", descripcion="Refrescos")
+        producto = Producto.objects.create(
+            nombre="Gaseosa",
+            descripcion="Botella de 1.5L",
+            precio=2.5,
+            stock=10,
+            categoria=categoria,
+        )
+
+        self.assertEqual(categoria.nombre, "Bebidas")
+        self.assertEqual(producto.categoria, categoria)
+        self.assertEqual(producto.precio, 2.5)
+        self.assertEqual(producto.stock, 10)
+        self.assertTrue(producto.activo)
 
 
 class RegistroUsuarioTests(TestCase):

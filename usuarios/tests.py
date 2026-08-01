@@ -26,6 +26,55 @@ class ProductosTests(TestCase):
         self.assertTrue(producto.activo)
 
 
+class CRUDProductosTests(TestCase):
+    def setUp(self):
+        self.admin = Usuario.objects.create_user(
+            username="administrador",
+            password="ClaveSegura2026!",
+            rol=Usuario.Rol.ADMIN,
+        )
+        self.categoria = Categoria.objects.create(
+            nombre="Lácteos",
+            descripcion="Productos lácteos",
+        )
+
+    def test_admin_puede_listar_productos(self):
+        producto = Producto.objects.create(
+            nombre="Leche",
+            descripcion="Leche entera",
+            precio=1.75,
+            stock=20,
+            categoria=self.categoria,
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse("usuarios:productos"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, producto.nombre)
+        self.assertContains(response, "1.75")
+
+    def test_admin_puede_crear_producto(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse("usuarios:producto_crear"),
+            {
+                "nombre": "Yogur",
+                "descripcion": "Yogur natural",
+                "precio": "2.50",
+                "stock": "15",
+                "categoria": self.categoria.pk,
+                "activo": True,
+            },
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("usuarios:productos"))
+        self.assertTrue(Producto.objects.filter(nombre="Yogur").exists())
+        self.assertContains(response, "Yogur")
+
+
 class RegistroUsuarioTests(TestCase):
     def setUp(self):
         self.url = reverse("usuarios:registro")

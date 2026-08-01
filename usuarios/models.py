@@ -34,6 +34,10 @@ class Producto(models.Model):
         verbose_name_plural = "productos"
         ordering = ["nombre"]
 
+    @property
+    def precio_formateado(self):
+        return f"{self.precio:.2f}"
+
     def __str__(self):
         return self.nombre
 

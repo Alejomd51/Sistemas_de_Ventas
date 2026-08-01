@@ -2,9 +2,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
-from .forms import RegistroUsuarioForm
+from .forms import ProductoForm, RegistroUsuarioForm
 from .decorators import rol_requerido
-from .models import Usuario
+from .models import Producto, Usuario
 
 
 @login_required
@@ -20,6 +20,31 @@ def panel_admin(request):
 @rol_requerido(Usuario.Rol.VENDEDOR)
 def panel_vendedor(request):
     return render(request, "usuarios/panel_vendedor.html")
+
+
+@login_required
+@rol_requerido(Usuario.Rol.ADMIN)
+def productos(request):
+    productos_list = Producto.objects.select_related("categoria").all()
+    return render(request, "usuarios/productos.html", {"productos": productos_list})
+
+
+@login_required
+@rol_requerido(Usuario.Rol.ADMIN)
+def producto_crear(request):
+    if request.method == "POST":
+        form = ProductoForm(request.POST)
+        if form.is_valid():
+            producto = form.save()
+            messages.success(
+                request,
+                f"Producto '{producto.nombre}' creado correctamente.",
+            )
+            return redirect("usuarios:productos")
+    else:
+        form = ProductoForm()
+
+    return render(request, "usuarios/producto_form.html", {"form": form})
 
 
 def registro(request):

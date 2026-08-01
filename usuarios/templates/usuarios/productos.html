@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Productos</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }
+        main { max-width: 960px; margin: 40px auto; padding: 24px; background: white; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+        th { background: #f9fafb; }
+        .actions { margin-bottom: 16px; }
+        a { color: #dc2626; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Productos</h1>
+    <div class="actions">
+        <a href="{% url 'usuarios:producto_crear' %}">Crear producto</a> |
+        <a href="{% url 'usuarios:panel_admin' %}">Volver al panel</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    {% if productos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Activo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                    <tr>
+                        <td>{{ producto.nombre }}</td>
+                        <td>{{ producto.categoria.nombre }}</td>
+                        <td>{{ producto.precio_formateado }}</td>
+                        <td>{{ producto.stock }}</td>
+                        <td>{% if producto.activo %}Sí{% else %}No{% endif %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay productos registrados.</p>
+    {% endif %}
+</main>
+</body>
+</html>

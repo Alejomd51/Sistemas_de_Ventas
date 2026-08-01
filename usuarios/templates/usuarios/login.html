@@ -11,12 +11,17 @@
         input { box-sizing: border-box; width: 100%; padding: 9px; margin-top: 5px; }
         button { width: 100%; margin-top: 20px; padding: 11px; border: 0; border-radius: 6px; background: #2563eb; color: white; cursor: pointer; }
         .errorlist, .error { color: #b91c1c; }
+        .mensaje { padding: 12px; background: #dcfce7; color: #166534; border-radius: 6px; }
         a { color: #2563eb; }
     </style>
 </head>
 <body>
 <main>
     <h1>Iniciar sesión</h1>
+
+    {% for message in messages %}
+        <p class="mensaje">{{ message }}</p>
+    {% endfor %}
 
     {% if form.errors %}
         <p class="error">El usuario o la contraseña no son correctos.</p>

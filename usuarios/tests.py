@@ -33,8 +33,11 @@ class RegistroUsuarioTests(TestCase):
             follow=True,
         )
 
-        self.assertRedirects(response, self.url)
-        self.assertContains(response, "Usuario registrado correctamente.")
+        self.assertRedirects(response, reverse("usuarios:login"))
+        self.assertContains(
+            response,
+            "Usuario registrado correctamente. Ya puedes iniciar sesión.",
+        )
         usuario = Usuario.objects.get(username="vendedor1")
         self.assertEqual(usuario.rol, Usuario.Rol.VENDEDOR)
         self.assertTrue(usuario.check_password("ClaveSegura2026!"))

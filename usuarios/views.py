@@ -27,8 +27,11 @@ def registro(request):
         form = RegistroUsuarioForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "Usuario registrado correctamente.")
-            return redirect("usuarios:registro")
+            messages.success(
+                request,
+                "Usuario registrado correctamente. Ya puedes iniciar sesión.",
+            )
+            return redirect("usuarios:login")
     else:
         form = RegistroUsuarioForm()
 

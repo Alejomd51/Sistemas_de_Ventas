@@ -6,6 +6,15 @@ from usuarios.models import Producto
 from .models import ItemVenta, Venta
 
 
+class VentaForm(forms.ModelForm):
+    class Meta:
+        model = Venta
+        fields = ("metodo_pago",)
+        widgets = {
+            "metodo_pago": forms.Select(attrs={"class": "form-select"}),
+        }
+
+
 class ItemVentaForm(forms.ModelForm):
     """Formulario para cada ítem dentro de una venta."""
 

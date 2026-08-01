@@ -9,6 +9,11 @@ TASA_IVA = Decimal(str(getattr(settings, "TASA_IVA", "0.15")))
 
 
 class Venta(models.Model):
+    class MetodoPago(models.TextChoices):
+        EFECTIVO = "EFECTIVO", "Efectivo"
+        TARJETA = "TARJETA", "Tarjeta (Crédito/Débito)"
+        TRANSFERENCIA = "TRANSFERENCIA", "Transferencia Bancaria"
+
     vendedor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -16,6 +21,12 @@ class Venta(models.Model):
         blank=True,
         related_name="ventas",
         verbose_name="vendedor",
+    )
+    metodo_pago = models.CharField(
+        max_length=20,
+        choices=MetodoPago.choices,
+        default=MetodoPago.EFECTIVO,
+        verbose_name="método de pago"
     )
     fecha = models.DateTimeField(auto_now_add=True, verbose_name="fecha")
     subtotal = models.DecimalField(

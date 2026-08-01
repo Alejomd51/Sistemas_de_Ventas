@@ -118,6 +118,7 @@ class VentaViewTests(TestCase):
         data = _formset_data([
             {"producto": self.producto.pk, "cantidad": 2},
         ])
+        data["metodo_pago"] = "EFECTIVO"
         response = self.client.post(
             reverse("ventas:venta_crear"), data, follow=True,
         )
@@ -145,6 +146,7 @@ class VentaViewTests(TestCase):
             {"producto": self.producto.pk, "cantidad": 3},
             {"producto": self.producto2.pk, "cantidad": 2},
         ])
+        data["metodo_pago"] = "EFECTIVO"
         response = self.client.post(
             reverse("ventas:venta_crear"), data, follow=True,
         )
@@ -178,6 +180,7 @@ class VentaViewTests(TestCase):
         data = _formset_data([
             {"producto": self.producto.pk, "cantidad": 1},
         ])
+        data["metodo_pago"] = "EFECTIVO"
         self.client.post(reverse("ventas:venta_crear"), data)
 
         venta = Venta.objects.first()
@@ -189,6 +192,7 @@ class VentaViewTests(TestCase):
         data = _formset_data([
             {"producto": self.producto.pk, "cantidad": 999},
         ])
+        data["metodo_pago"] = "EFECTIVO"
         response = self.client.post(reverse("ventas:venta_crear"), data)
 
         self.assertEqual(response.status_code, 200)
@@ -201,6 +205,7 @@ class VentaViewTests(TestCase):
             {"producto": self.producto.pk, "cantidad": 1},
             {"producto": self.producto.pk, "cantidad": 2},
         ])
+        data["metodo_pago"] = "EFECTIVO"
         response = self.client.post(reverse("ventas:venta_crear"), data)
 
         self.assertEqual(response.status_code, 200)
@@ -211,6 +216,7 @@ class VentaViewTests(TestCase):
         self.client.force_login(self.vendedor)
 
         data = _formset_data([])
+        data["metodo_pago"] = "EFECTIVO"
         response = self.client.post(reverse("ventas:venta_crear"), data)
 
         self.assertEqual(response.status_code, 200)
@@ -224,6 +230,7 @@ class VentaViewTests(TestCase):
         data = _formset_data([
             {"producto": self.producto.pk, "cantidad": 4},
         ])
+        data["metodo_pago"] = "EFECTIVO"
         self.client.post(reverse("ventas:venta_crear"), data)
 
         response = self.client.get(reverse("ventas:ventas"))

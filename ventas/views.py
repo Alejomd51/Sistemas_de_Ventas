@@ -6,7 +6,7 @@ from django.shortcuts import redirect, render
 from usuarios.decorators import rol_requerido
 from usuarios.models import Usuario
 
-from .forms import ItemVentaFormSet
+from .forms import ItemVentaFormSet, VentaForm
 from .models import Venta
 
 
@@ -26,11 +26,12 @@ def ventas(request):
 def venta_crear(request):
     if request.method == "POST":
         venta = Venta(vendedor=request.user)
+        venta_form = VentaForm(request.POST, instance=venta)
         formset = ItemVentaFormSet(request.POST, instance=venta)
 
-        if formset.is_valid():
+        if venta_form.is_valid() and formset.is_valid():
             with transaction.atomic():
-                venta.save()
+                venta = venta_form.save()
                 items = formset.save(commit=False)
                 for item in items:
                     item.precio_unitario = item.producto.precio
@@ -42,6 +43,7 @@ def venta_crear(request):
             return redirect("ventas:ventas")
     else:
         venta = Venta()
+        venta_form = VentaForm(instance=venta)
         formset = ItemVentaFormSet(instance=venta)
 
-    return render(request, "ventas/venta_form.html", {"formset": formset})
+    return render(request, "ventas/venta_form.html", {"formset": formset, "venta_form": venta_form})

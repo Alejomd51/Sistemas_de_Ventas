@@ -40,6 +40,7 @@
                     <th>#</th>
                     <th>Vendedor</th>
                     <th>Fecha</th>
+                    <th>Método</th>
                     <th>Subtotal</th>
                     <th>IVA</th>
                     <th>Total</th>
@@ -52,6 +53,7 @@
                         <td>{{ venta.pk }}</td>
                         <td>{{ venta.vendedor|default:"—" }}</td>
                         <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>{{ venta.get_metodo_pago_display }}</td>
                         <td class="num">${{ venta.subtotal }}</td>
                         <td class="num">${{ venta.impuesto }}</td>
                         <td class="num"><strong>${{ venta.total }}</strong></td>

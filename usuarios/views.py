@@ -1,7 +1,13 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
 from .forms import RegistroUsuarioForm
+
+
+@login_required
+def inicio(request):
+    return render(request, "usuarios/inicio.html")
 
 
 def registro(request):

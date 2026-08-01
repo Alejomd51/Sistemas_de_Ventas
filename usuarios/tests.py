@@ -49,3 +49,38 @@ class RegistroUsuarioTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Usuario.objects.filter(username="vendedor1").exists())
+
+
+class AutenticacionTests(TestCase):
+    def setUp(self):
+        self.password = "ClaveSegura2026!"
+        self.usuario = Usuario.objects.create_user(
+            username="dilan",
+            password=self.password,
+            rol=Usuario.Rol.VENDEDOR,
+        )
+
+    def test_inicio_requiere_autenticacion(self):
+        response = self.client.get(reverse("usuarios:inicio"))
+
+        self.assertRedirects(
+            response,
+            f'{reverse("usuarios:login")}?next={reverse("usuarios:inicio")}',
+        )
+
+    def test_usuario_puede_iniciar_sesion(self):
+        response = self.client.post(
+            reverse("usuarios:login"),
+            {"username": self.usuario.username, "password": self.password},
+        )
+
+        self.assertRedirects(response, reverse("usuarios:inicio"))
+        self.assertEqual(int(self.client.session["_auth_user_id"]), self.usuario.pk)
+
+    def test_usuario_puede_cerrar_sesion(self):
+        self.client.force_login(self.usuario)
+
+        response = self.client.post(reverse("usuarios:logout"))
+
+        self.assertRedirects(response, reverse("usuarios:login"))
+        self.assertNotIn("_auth_user_id", self.client.session)

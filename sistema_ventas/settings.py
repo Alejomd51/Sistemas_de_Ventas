@@ -119,3 +119,7 @@ STATIC_URL = 'static/'
 
 # Modelo de usuario propio del sistema de ventas.
 AUTH_USER_MODEL = 'usuarios.Usuario'
+
+LOGIN_URL = 'usuarios:login'
+LOGIN_REDIRECT_URL = 'usuarios:inicio'
+LOGOUT_REDIRECT_URL = 'usuarios:login'

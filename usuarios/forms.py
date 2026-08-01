@@ -5,12 +5,8 @@ from django.core.exceptions import ValidationError
 from .models import Producto, Usuario
 
 
-class VentaForm(forms.Form):
-    producto = forms.ModelChoiceField(queryset=Producto.objects.filter(activo=True))
-    cantidad = forms.IntegerField(min_value=1)
-
-
 class ProductoForm(forms.ModelForm):
+
     class Meta:
         model = Producto
         fields = ("nombre", "descripcion", "precio", "stock", "categoria", "activo")

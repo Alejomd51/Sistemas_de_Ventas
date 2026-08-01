@@ -1,0 +1,62 @@
+from django.conf import settings
+from django.db import models
+
+
+class Venta(models.Model):
+    vendedor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ventas",
+        verbose_name="vendedor",
+    )
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="fecha")
+    total = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.0, verbose_name="total"
+    )
+
+    class Meta:
+        verbose_name = "venta"
+        verbose_name_plural = "ventas"
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"Venta {self.pk}"
+
+
+class ItemVenta(models.Model):
+    venta = models.ForeignKey(
+        Venta,
+        related_name="items",
+        on_delete=models.CASCADE,
+        verbose_name="venta",
+    )
+    producto = models.ForeignKey(
+        "usuarios.Producto",
+        on_delete=models.PROTECT,
+        related_name="items_venta",
+        verbose_name="producto",
+    )
+    cantidad = models.PositiveIntegerField(verbose_name="cantidad")
+    precio_unitario = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name="precio unitario"
+    )
+
+    class Meta:
+        verbose_name = "ítem de venta"
+        verbose_name_plural = "ítems de venta"
+
+    @property
+    def subtotal(self):
+        return self.cantidad * self.precio_unitario
+
+    def save(self, *args, **kwargs):
+        creating = self._state.adding
+        super().save(*args, **kwargs)
+        if creating:
+            self.producto.stock -= self.cantidad
+            self.producto.save(update_fields=["stock"])
+
+    def __str__(self):
+        return f"{self.producto.nombre} x {self.cantidad}"

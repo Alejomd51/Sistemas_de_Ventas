@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Categoria, DetalleVenta, Producto, Usuario, Venta
+from .models import Categoria, Producto, Usuario
 
 
 @admin.register(Categoria)
@@ -17,16 +17,6 @@ class ProductoAdmin(admin.ModelAdmin):
     search_fields = ("nombre", "descripcion")
 
 
-@admin.register(Venta)
-class VentaAdmin(admin.ModelAdmin):
-    list_display = ("pk", "fecha", "total")
-
-
-@admin.register(DetalleVenta)
-class DetalleVentaAdmin(admin.ModelAdmin):
-    list_display = ("venta", "producto", "cantidad", "precio_unitario", "subtotal")
-
-
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
@@ -37,3 +27,4 @@ class UsuarioAdmin(UserAdmin):
     )
     list_display = ("username", "email", "first_name", "last_name", "rol", "is_staff")
     list_filter = UserAdmin.list_filter + ("rol",)
+

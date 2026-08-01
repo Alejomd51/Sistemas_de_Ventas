@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ventas</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }
+        main { max-width: 960px; margin: 40px auto; padding: 24px; background: white; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+        th { background: #f9fafb; }
+        a { color: #dc2626; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Ventas</h1>
+    <p><a href="{% url 'ventas:venta_crear' %}">Registrar venta</a> | <a href="{% url 'usuarios:panel_vendedor' %}">Volver al panel</a></p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    {% if ventas %}
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Vendedor</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Detalles</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venta in ventas %}
+                    <tr>
+                        <td>{{ venta.pk }}</td>
+                        <td>{{ venta.vendedor|default:"—" }}</td>
+                        <td>{{ venta.fecha }}</td>
+                        <td>{{ venta.total }}</td>
+                        <td>
+                            {% for item in venta.items.all %}
+                                {{ item.producto.nombre }} x {{ item.cantidad }}<br>
+                            {% empty %}
+                                Sin detalles
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay ventas registradas.</p>
+    {% endif %}
+</main>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Comprobante de Venta #{{ venta.pk }}</title>
+    <style>
+        :root {
+            --bg: #f3f4f6;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Tipografía estilo ticket/recibo */
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.4;
+            padding: 20px;
+        }
+
+        .receipt-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px dashed var(--border);
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+
+        .items-table th {
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+        }
+
+        .items-table td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+
+        .items-table .num {
+            text-align: right;
+        }
+
+        .totals {
+            margin-top: 15px;
+            border-top: 2px dashed var(--border);
+            padding-top: 15px;
+        }
+
+        .totals .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .totals .grand-total {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            border-top: 1px solid var(--text);
+            padding-top: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* Botones de acción (No se imprimirán) */
+        .actions {
+            max-width: 400px;
+            margin: 20px auto;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 0.9rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-print { background: #2563eb; }
+        .btn-print:hover { background: #1d4ed8; }
+        
+        .btn-back { background: #6b7280; }
+        .btn-back:hover { background: #4b5563; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .receipt-container { box-shadow: none; max-width: 100%; padding: 0; margin: 0; }
+            .actions { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="actions">
+        <button type="button" class="btn btn-print" onclick="window.print()">🖨️ Imprimir Comprobante</button>
+        <a href="{% url 'ventas:ventas' %}" class="btn btn-back">Volver a Ventas</a>
+    </div>
+
+    <div class="receipt-container">
+        <div class="header">
+            <h1>Sistema de Ventas</h1>
+            <p>COMPROBANTE DE VENTA</p>
+        </div>
+
+        <div class="info-row">
+            <span>Ticket:</span>
+            <span>#{{ venta.pk|stringformat:"06d" }}</span>
+        </div>
+        <div class="info-row">
+            <span>Fecha:</span>
+            <span>{{ venta.fecha|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="info-row">
+            <span>Vendedor:</span>
+            <span>{{ venta.vendedor.get_full_name|default:venta.vendedor.username }}</span>
+        </div>
+        <div class="info-row">
+            <span>Método de Pago:</span>
+            <span>{{ venta.get_metodo_pago_display }}</span>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>CANT</th>
+                    <th>PRODUCTO</th>
+                    <th class="num">PRECIO</th>
+                    <th class="num">SUBTOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in venta.items.all %}
+                <tr>
+                    <td>{{ item.cantidad }}</td>
+                    <td>{{ item.producto.nombre }}</td>
+                    <td class="num">${{ item.precio_unitario }}</td>
+                    <td class="num">${{ item.subtotal }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <div class="total-row">
+                <span>Subtotal:</span>
+                <span>${{ venta.subtotal }}</span>
+            </div>
+            <div class="total-row">
+                <span>IVA ({{ venta.tasa_iva_porcentaje }}%):</span>
+                <span>${{ venta.impuesto }}</span>
+            </div>
+            <div class="total-row grand-total">
+                <span>TOTAL A PAGAR:</span>
+                <span>${{ venta.total }}</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>¡Gracias por su compra!</p>
+            <p>Este documento no tiene validez fiscal.</p>
+        </div>
+    </div>
+
+</body>
+</html>

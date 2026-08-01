@@ -45,6 +45,7 @@
                     <th>IVA</th>
                     <th>Total</th>
                     <th>Ítems</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -64,6 +65,9 @@
                             {% empty %}
                                 <span class="empty">Sin ítems</span>
                             {% endfor %}
+                        </td>
+                        <td>
+                            <a href="{% url 'ventas:venta_comprobante' venta.pk %}" style="font-weight: normal; font-size: 0.9rem;" title="Ver Comprobante">🧾 Imprimir</a>
                         </td>
                     </tr>
                 {% endfor %}

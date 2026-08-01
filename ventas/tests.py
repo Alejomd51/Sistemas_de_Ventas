@@ -242,3 +242,36 @@ class VentaViewTests(TestCase):
         # Verificar que hay datos de venta (el pk)
         venta = Venta.objects.first()
         self.assertContains(response, str(venta.pk))
+
+    def test_vendedor_puede_ver_comprobante(self):
+        self.client.force_login(self.vendedor)
+        
+        # Crear venta
+        venta = Venta.objects.create(vendedor=self.vendedor)
+        ItemVenta.objects.create(
+            venta=venta,
+            producto=self.producto,
+            cantidad=1,
+            precio_unitario=self.producto.precio
+        )
+        venta.calcular_totales()
+        venta.save()
+        
+        response = self.client.get(reverse("ventas:venta_comprobante", args=[venta.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "COMPROBANTE DE VENTA")
+        self.assertContains(response, str(venta.pk))
+        
+    def test_vendedor_no_puede_ver_comprobante_de_otro_vendedor(self):
+        otro_vendedor = Usuario.objects.create_user(
+            username="otro",
+            password="ClaveSegura2026!",
+            rol=Usuario.Rol.VENDEDOR,
+        )
+        venta_otro = Venta.objects.create(vendedor=otro_vendedor)
+        
+        self.client.force_login(self.vendedor)
+        response = self.client.get(reverse("ventas:venta_comprobante", args=[venta_otro.pk]))
+        
+        # Debe redirigir o prohibir
+        self.assertRedirects(response, reverse("ventas:ventas"))

@@ -47,6 +47,11 @@
                         <td>{{ producto.precio_formateado }}</td>
                         <td>{{ producto.stock }}</td>
                         <td>{% if producto.activo %}Sí{% else %}No{% endif %}</td>
+                        <td>
+                            <a href="{% url 'usuarios:producto_editar' producto.pk %}">Editar</a>
+                            |
+                            <a href="{% url 'usuarios:producto_eliminar' producto.pk %}">Eliminar</a>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

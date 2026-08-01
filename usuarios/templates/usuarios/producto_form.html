@@ -16,7 +16,7 @@
 </head>
 <body>
 <main>
-    <h1>Crear producto</h1>
+    <h1>{{ accion }} producto</h1>
     <form method="post">
         {% csrf_token %}
         {% for field in form %}

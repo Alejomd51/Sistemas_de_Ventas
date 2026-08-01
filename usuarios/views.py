@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ProductoForm, RegistroUsuarioForm
 from .decorators import rol_requerido
@@ -44,7 +44,40 @@ def producto_crear(request):
     else:
         form = ProductoForm()
 
-    return render(request, "usuarios/producto_form.html", {"form": form})
+    return render(request, "usuarios/producto_form.html", {"form": form, "accion": "Crear"})
+
+
+@login_required
+@rol_requerido(Usuario.Rol.ADMIN)
+def producto_editar(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if request.method == "POST":
+        form = ProductoForm(request.POST, instance=producto)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Producto actualizado correctamente.")
+            return redirect("usuarios:productos")
+    else:
+        form = ProductoForm(instance=producto)
+
+    return render(
+        request,
+        "usuarios/producto_form.html",
+        {"form": form, "accion": "Editar", "producto": producto},
+    )
+
+
+@login_required
+@rol_requerido(Usuario.Rol.ADMIN)
+def producto_eliminar(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if request.method == "POST":
+        nombre = producto.nombre
+        producto.delete()
+        messages.success(request, f"Producto eliminado correctamente: {nombre}")
+        return redirect("usuarios:productos")
+
+    return render(request, "usuarios/producto_confirm_delete.html", {"producto": producto})
 
 
 def registro(request):

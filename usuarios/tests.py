@@ -74,6 +74,53 @@ class CRUDProductosTests(TestCase):
         self.assertTrue(Producto.objects.filter(nombre="Yogur").exists())
         self.assertContains(response, "Yogur")
 
+    def test_admin_puede_editar_producto(self):
+        producto = Producto.objects.create(
+            nombre="Leche",
+            descripcion="Leche entera",
+            precio=1.75,
+            stock=20,
+            categoria=self.categoria,
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse("usuarios:producto_editar", kwargs={"pk": producto.pk}),
+            {
+                "nombre": "Leche desnatada",
+                "descripcion": "Leche baja en grasa",
+                "precio": "2.10",
+                "stock": "10",
+                "categoria": self.categoria.pk,
+                "activo": True,
+            },
+            follow=True,
+        )
+
+        producto.refresh_from_db()
+        self.assertRedirects(response, reverse("usuarios:productos"))
+        self.assertEqual(producto.nombre, "Leche desnatada")
+        self.assertContains(response, "Leche desnatada")
+
+    def test_admin_puede_eliminar_producto(self):
+        producto = Producto.objects.create(
+            nombre="Queso",
+            descripcion="Queso fresco",
+            precio=3.5,
+            stock=8,
+            categoria=self.categoria,
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse("usuarios:producto_eliminar", kwargs={"pk": producto.pk}),
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("usuarios:productos"))
+        self.assertFalse(Producto.objects.filter(pk=producto.pk).exists())
+        self.assertContains(response, "Producto eliminado correctamente")
+
 
 class RegistroUsuarioTests(TestCase):
     def setUp(self):

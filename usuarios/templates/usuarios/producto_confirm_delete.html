@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Eliminar producto</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }
+        main { max-width: 680px; margin: 40px auto; padding: 24px; background: white; border-radius: 10px; }
+        button { padding: 10px 16px; border: 0; border-radius: 6px; background: #dc2626; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Eliminar producto</h1>
+    <p>¿Seguro que deseas eliminar el producto <strong>{{ producto.nombre }}</strong>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Sí, eliminar</button>
+        <a href="{% url 'usuarios:productos' %}">Cancelar</a>
+    </form>
+</main>
+</body>
+</html>

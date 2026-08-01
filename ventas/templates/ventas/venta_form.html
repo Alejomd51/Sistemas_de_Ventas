@@ -5,28 +5,322 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Registrar venta</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }
-        main { max-width: 680px; margin: 40px auto; padding: 24px; background: white; border-radius: 10px; }
-        form { display: grid; gap: 12px; }
-        .field { display: grid; gap: 4px; }
-        input, select { padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
-        button { padding: 10px 16px; border: 0; border-radius: 6px; background: #dc2626; color: white; cursor: pointer; }
+        :root {
+            --primary: #dc2626;
+            --primary-hover: #b91c1c;
+            --success: #16a34a;
+            --danger: #ef4444;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --border: #d1d5db;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --radius: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        main {
+            max-width: 780px;
+            margin: 32px auto;
+            padding: 28px;
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--bg);
+        }
+
+        /* ---------- Errores globales ---------- */
+        .errors {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            color: var(--danger);
+            font-size: .9rem;
+        }
+        .errors ul { margin: 0; padding-left: 18px; }
+
+        /* ---------- Tabla de ítems ---------- */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+        .items-table th {
+            text-align: left;
+            padding: 8px 10px;
+            font-size: .8rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--muted);
+            border-bottom: 2px solid var(--bg);
+        }
+        .items-table td {
+            padding: 8px 10px;
+            vertical-align: top;
+        }
+        .items-table tr.item-row { border-bottom: 1px solid var(--bg); }
+        .items-table tr.item-row.deleted { opacity: .35; }
+
+        .items-table select,
+        .items-table input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: .95rem;
+            background: white;
+        }
+        .items-table select:focus,
+        .items-table input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(220,38,38,.15);
+        }
+
+        td .errorlist {
+            list-style: none;
+            padding: 0;
+            margin: 4px 0 0;
+            font-size: .8rem;
+            color: var(--danger);
+        }
+
+        /* Columna eliminar */
+        .col-del { width: 44px; text-align: center; }
+        .btn-del {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: var(--muted);
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-del:hover { border-color: var(--danger); color: var(--danger); background: #fef2f2; }
+
+        /* ---------- Botones ---------- */
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: .95rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background .15s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .btn-secondary:hover { background: var(--bg); }
+        .btn-add {
+            background: none;
+            border: 1px dashed var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: .9rem;
+            transition: all .15s;
+        }
+        .btn-add:hover { border-color: var(--primary); color: var(--primary); }
+
+        .back-link {
+            margin-top: 16px;
+            display: inline-block;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: .9rem;
+        }
+        .back-link:hover { color: var(--primary); }
+
+        /* Ocultar management form visualmente */
+        .management-form { display: none; }
     </style>
 </head>
 <body>
 <main>
     <h1>Registrar venta</h1>
-    <form method="post">
+
+    {% if formset.non_form_errors %}
+        <div class="errors">
+            <ul>
+            {% for error in formset.non_form_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form method="post" id="venta-form">
         {% csrf_token %}
-        {% for field in form %}
-            <div class="field">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-            </div>
-        {% endfor %}
-        <button type="submit">Guardar venta</button>
+
+        <div class="management-form">
+            {{ formset.management_form }}
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th style="width:120px">Cantidad</th>
+                    <th class="col-del"></th>
+                </tr>
+            </thead>
+            <tbody id="items-body">
+                {% for form in formset %}
+                <tr class="item-row" data-index="{{ forloop.counter0 }}">
+                    {# Campos ocultos del form (id, venta FK) #}
+                    {% for hidden in form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+
+                    <td>
+                        {{ form.producto }}
+                        {{ form.producto.errors }}
+                    </td>
+                    <td>
+                        {{ form.cantidad }}
+                        {{ form.cantidad.errors }}
+                    </td>
+                    <td class="col-del">
+                        <span class="delete-field" style="display:none">{{ form.DELETE }}</span>
+                        <button type="button" class="btn-del" title="Eliminar ítem">✕</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div style="margin-bottom:20px">
+            <button type="button" class="btn-add" id="btn-add-item">+ Agregar ítem</button>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn btn-primary">Guardar venta</button>
+            <a href="{% url 'ventas:ventas' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
     </form>
-    <p><a href="{% url 'ventas:ventas' %}">Volver a ventas</a></p>
+
+    <a href="{% url 'ventas:ventas' %}" class="back-link">← Volver a ventas</a>
 </main>
+
+<script>
+(function() {
+    const tbody = document.getElementById('items-body');
+    const btnAdd = document.getElementById('btn-add-item');
+    const totalFormsInput = document.querySelector('[name$="-TOTAL_FORMS"]');
+
+    // ---- Template: clonar la última fila y limpiar valores ----
+    function getEmptyRowHtml(index) {
+        // Tomamos la primera fila como plantilla
+        const templateRow = tbody.querySelector('.item-row');
+        if (!templateRow) return '';
+
+        let html = templateRow.outerHTML;
+        // Reemplazar todos los índices del formset (form-0-xxx → form-{index}-xxx)
+        const oldPrefix = /form-\d+/g;
+        html = html.replace(oldPrefix, 'form-' + index);
+        // Actualizar data-index
+        html = html.replace(/data-index="\d+"/, 'data-index="' + index + '"');
+
+        // Crear un elemento temporal para limpiar valores
+        const temp = document.createElement('tbody');
+        temp.innerHTML = html;
+        const row = temp.querySelector('.item-row');
+
+        // Limpiar select y inputs
+        const select = row.querySelector('select');
+        if (select) select.selectedIndex = 0;
+
+        const inputs = row.querySelectorAll('input[type="number"]');
+        inputs.forEach(function(inp) { inp.value = '1'; });
+
+        // Limpiar campo id oculto (es un nuevo form)
+        const idInput = row.querySelector('input[name$="-id"]');
+        if (idInput) idInput.value = '';
+
+        // Quitar checkbox DELETE marcado
+        const delCheck = row.querySelector('input[name$="-DELETE"]');
+        if (delCheck) delCheck.checked = false;
+
+        // Quitar errores
+        const errorLists = row.querySelectorAll('.errorlist');
+        errorLists.forEach(function(el) { el.remove(); });
+
+        // Quitar clase deleted
+        row.classList.remove('deleted');
+
+        return temp.innerHTML;
+    }
+
+    // ---- Agregar ítem ----
+    btnAdd.addEventListener('click', function() {
+        const currentTotal = parseInt(totalFormsInput.value);
+        const html = getEmptyRowHtml(currentTotal);
+        tbody.insertAdjacentHTML('beforeend', html);
+        totalFormsInput.value = currentTotal + 1;
+
+        // Hacer foco en el select del nuevo producto
+        const lastRow = tbody.querySelector('.item-row:last-child');
+        if (lastRow) {
+            const sel = lastRow.querySelector('select');
+            if (sel) sel.focus();
+        }
+    });
+
+    // ---- Eliminar ítem (delegación de eventos) ----
+    tbody.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-del');
+        if (!btn) return;
+
+        const row = btn.closest('.item-row');
+        const rows = tbody.querySelectorAll('.item-row:not(.deleted)');
+
+        // No permitir eliminar si es el único ítem visible
+        if (rows.length <= 1) return;
+
+        // Marcar el checkbox DELETE del formset
+        const delCheckbox = row.querySelector('input[name$="-DELETE"]');
+        if (delCheckbox) {
+            delCheckbox.checked = true;
+            row.classList.add('deleted');
+        } else {
+            // Si es un form nuevo (sin id), simplemente lo quitamos del DOM
+            row.remove();
+        }
+    });
+})();
+</script>
 </body>
 </html>

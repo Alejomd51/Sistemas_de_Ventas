@@ -72,6 +72,11 @@ class AutenticacionTests(TestCase):
             f'{reverse("usuarios:login")}?next={reverse("usuarios:inicio")}',
         )
 
+    def test_ruta_principal_redirige_al_login(self):
+        response = self.client.get("/")
+
+        self.assertRedirects(response, reverse("usuarios:login"))
+
     def test_usuario_puede_iniciar_sesion(self):
         response = self.client.post(
             reverse("usuarios:login"),

@@ -2,9 +2,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import ProductoForm, RegistroUsuarioForm
+from .forms import ProductoForm, RegistroUsuarioForm, VentaForm
 from .decorators import rol_requerido
-from .models import Producto, Usuario
+from .models import DetalleVenta, Producto, Usuario, Venta
 
 
 @login_required
@@ -20,6 +20,41 @@ def panel_admin(request):
 @rol_requerido(Usuario.Rol.VENDEDOR)
 def panel_vendedor(request):
     return render(request, "usuarios/panel_vendedor.html")
+
+
+@login_required
+@rol_requerido(Usuario.Rol.VENDEDOR)
+def ventas(request):
+    ventas_list = Venta.objects.prefetch_related("detalles").all()
+    return render(request, "usuarios/ventas.html", {"ventas": ventas_list})
+
+
+@login_required
+@rol_requerido(Usuario.Rol.VENDEDOR)
+def venta_crear(request):
+    if request.method == "POST":
+        form = VentaForm(request.POST)
+        if form.is_valid():
+            producto = form.cleaned_data["producto"]
+            cantidad = form.cleaned_data["cantidad"]
+            if producto.stock < cantidad:
+                messages.error(request, "No hay suficiente stock para esta venta.")
+            else:
+                venta = Venta.objects.create()
+                DetalleVenta.objects.create(
+                    venta=venta,
+                    producto=producto,
+                    cantidad=cantidad,
+                    precio_unitario=producto.precio,
+                )
+                venta.total = sum(detalle.subtotal for detalle in venta.detalles.all())
+                venta.save(update_fields=["total"])
+                messages.success(request, "Venta registrada correctamente")
+                return redirect("usuarios:ventas")
+    else:
+        form = VentaForm()
+
+    return render(request, "usuarios/venta_form.html", {"form": form})
 
 
 @login_required

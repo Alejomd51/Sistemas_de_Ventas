@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registrar venta</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }
+        main { max-width: 680px; margin: 40px auto; padding: 24px; background: white; border-radius: 10px; }
+        form { display: grid; gap: 12px; }
+        .field { display: grid; gap: 4px; }
+        input, select { padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+        button { padding: 10px 16px; border: 0; border-radius: 6px; background: #dc2626; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Registrar venta</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+            </div>
+        {% endfor %}
+        <button type="submit">Guardar venta</button>
+    </form>
+    <p><a href="{% url 'usuarios:ventas' %}">Volver a ventas</a></p>
+</main>
+</body>
+</html>

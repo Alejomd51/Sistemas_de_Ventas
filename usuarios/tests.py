@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from .models import Categoria, Producto, Usuario
+from .models import Categoria, DetalleVenta, Producto, Usuario, Venta
 
 
 class ProductosTests(TestCase):
@@ -120,6 +120,58 @@ class CRUDProductosTests(TestCase):
         self.assertRedirects(response, reverse("usuarios:productos"))
         self.assertFalse(Producto.objects.filter(pk=producto.pk).exists())
         self.assertContains(response, "Producto eliminado correctamente")
+
+
+class VentasTests(TestCase):
+    def test_crear_venta_reduce_el_stock_del_producto(self):
+        categoria = Categoria.objects.create(nombre="Lácteos")
+        producto = Producto.objects.create(
+            nombre="Leche",
+            descripcion="Leche entera",
+            precio=1.75,
+            stock=20,
+            categoria=categoria,
+        )
+
+        venta = Venta.objects.create()
+        detalle = DetalleVenta.objects.create(
+            venta=venta,
+            producto=producto,
+            cantidad=3,
+            precio_unitario=producto.precio,
+        )
+
+        producto.refresh_from_db()
+        self.assertEqual(detalle.subtotal, 5.25)
+        self.assertEqual(producto.stock, 17)
+        self.assertEqual(venta.detalles.count(), 1)
+
+    def test_vendedor_puede_registrar_una_venta_desde_la_interfaz(self):
+        categoria = Categoria.objects.create(nombre="Lácteos")
+        producto = Producto.objects.create(
+            nombre="Leche",
+            descripcion="Leche entera",
+            precio=1.75,
+            stock=20,
+            categoria=categoria,
+        )
+        vendedor = Usuario.objects.create_user(
+            username="vendedor",
+            password="ClaveSegura2026!",
+            rol=Usuario.Rol.VENDEDOR,
+        )
+        self.client.force_login(vendedor)
+
+        response = self.client.post(
+            reverse("usuarios:venta_crear"),
+            {"producto": producto.pk, "cantidad": 2},
+            follow=True,
+        )
+
+        producto.refresh_from_db()
+        self.assertRedirects(response, reverse("usuarios:ventas"))
+        self.assertEqual(producto.stock, 18)
+        self.assertContains(response, "Venta registrada correctamente")
 
 
 class RegistroUsuarioTests(TestCase):

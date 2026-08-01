@@ -42,6 +42,54 @@ class Producto(models.Model):
         return self.nombre
 
 
+class Venta(models.Model):
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="fecha")
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0.0, verbose_name="total")
+
+    class Meta:
+        verbose_name = "venta"
+        verbose_name_plural = "ventas"
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"Venta {self.pk}"
+
+
+class DetalleVenta(models.Model):
+    venta = models.ForeignKey(
+        Venta,
+        related_name="detalles",
+        on_delete=models.CASCADE,
+        verbose_name="venta",
+    )
+    producto = models.ForeignKey(
+        Producto,
+        on_delete=models.PROTECT,
+        related_name="detalles",
+        verbose_name="producto",
+    )
+    cantidad = models.PositiveIntegerField(verbose_name="cantidad")
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="precio unitario")
+
+    class Meta:
+        verbose_name = "detalle de venta"
+        verbose_name_plural = "detalles de venta"
+
+    @property
+    def subtotal(self):
+        return self.cantidad * self.precio_unitario
+
+    def save(self, *args, **kwargs):
+        creating = self._state.adding
+        super().save(*args, **kwargs)
+        if creating:
+            self.producto.stock -= self.cantidad
+            self.producto.save(update_fields=["stock"])
+
+    def __str__(self):
+        return f"{self.producto.nombre} x {self.cantidad}"
+
+
 class Usuario(AbstractUser):
     class Rol(models.TextChoices):
         ADMIN = "ADMIN", "Administrador"

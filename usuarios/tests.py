@@ -84,3 +84,54 @@ class AutenticacionTests(TestCase):
 
         self.assertRedirects(response, reverse("usuarios:login"))
         self.assertNotIn("_auth_user_id", self.client.session)
+
+
+class RestriccionPorRolTests(TestCase):
+    def setUp(self):
+        self.admin = Usuario.objects.create_user(
+            username="administrador",
+            password="ClaveSegura2026!",
+            rol=Usuario.Rol.ADMIN,
+        )
+        self.vendedor = Usuario.objects.create_user(
+            username="vendedor",
+            password="ClaveSegura2026!",
+            rol=Usuario.Rol.VENDEDOR,
+        )
+
+    def test_usuario_anonimo_es_enviado_al_login(self):
+        url = reverse("usuarios:panel_admin")
+
+        response = self.client.get(url)
+
+        self.assertRedirects(response, f'{reverse("usuarios:login")}?next={url}')
+
+    def test_admin_puede_acceder_a_su_panel(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse("usuarios:panel_admin"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Panel de administrador")
+
+    def test_vendedor_no_puede_acceder_al_panel_admin(self):
+        self.client.force_login(self.vendedor)
+
+        response = self.client.get(reverse("usuarios:panel_admin"))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_vendedor_puede_acceder_a_su_panel(self):
+        self.client.force_login(self.vendedor)
+
+        response = self.client.get(reverse("usuarios:panel_vendedor"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Panel de vendedor")
+
+    def test_admin_no_puede_acceder_al_panel_vendedor(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse("usuarios:panel_vendedor"))
+
+        self.assertEqual(response.status_code, 403)

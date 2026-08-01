@@ -5,22 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ventas</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }
-        main { max-width: 960px; margin: 40px auto; padding: 24px; background: white; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f4f6; margin: 0; }
+        main { max-width: 1060px; margin: 40px auto; padding: 24px; background: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+        h1 { font-size: 1.5rem; margin-bottom: 4px; }
+        .actions-bar { margin-bottom: 16px; }
+        .actions-bar a { color: #dc2626; text-decoration: none; font-weight: 600; }
+        .actions-bar a:hover { text-decoration: underline; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
-        th { background: #f9fafb; }
-        a { color: #dc2626; }
+        th { background: #f9fafb; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: #6b7280; }
+        td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .msg { padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; margin-bottom: 12px; color: #166534; font-size: .9rem; }
+        .empty { color: #9ca3af; font-style: italic; }
     </style>
 </head>
 <body>
 <main>
     <h1>Ventas</h1>
-    <p><a href="{% url 'ventas:venta_crear' %}">Registrar venta</a> | <a href="{% url 'usuarios:panel_vendedor' %}">Volver al panel</a></p>
+    <div class="actions-bar">
+        <a href="{% url 'ventas:venta_crear' %}">+ Registrar venta</a> &nbsp;|&nbsp;
+        <a href="{% url 'usuarios:panel_vendedor' %}">← Volver al panel</a>
+    </div>
 
     {% if messages %}
         {% for message in messages %}
-            <p>{{ message }}</p>
+            <div class="msg">{{ message }}</div>
         {% endfor %}
     {% endif %}
 
@@ -31,8 +40,10 @@
                     <th>#</th>
                     <th>Vendedor</th>
                     <th>Fecha</th>
+                    <th>Subtotal</th>
+                    <th>IVA</th>
                     <th>Total</th>
-                    <th>Detalles</th>
+                    <th>Ítems</th>
                 </tr>
             </thead>
             <tbody>
@@ -40,13 +51,16 @@
                     <tr>
                         <td>{{ venta.pk }}</td>
                         <td>{{ venta.vendedor|default:"—" }}</td>
-                        <td>{{ venta.fecha }}</td>
-                        <td>{{ venta.total }}</td>
+                        <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                        <td class="num">${{ venta.subtotal }}</td>
+                        <td class="num">${{ venta.impuesto }}</td>
+                        <td class="num"><strong>${{ venta.total }}</strong></td>
                         <td>
                             {% for item in venta.items.all %}
-                                {{ item.producto.nombre }} x {{ item.cantidad }}<br>
+                                {{ item.producto.nombre }} × {{ item.cantidad }}
+                                <small>(${{ item.subtotal }})</small><br>
                             {% empty %}
-                                Sin detalles
+                                <span class="empty">Sin ítems</span>
                             {% endfor %}
                         </td>
                     </tr>
@@ -54,7 +68,7 @@
             </tbody>
         </table>
     {% else %}
-        <p>No hay ventas registradas.</p>
+        <p class="empty">No hay ventas registradas.</p>
     {% endif %}
 </main>
 </body>

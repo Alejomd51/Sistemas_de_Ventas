@@ -11,8 +11,9 @@ class ItemVentaInline(admin.TabularInline):
 
 @admin.register(Venta)
 class VentaAdmin(admin.ModelAdmin):
-    list_display = ("pk", "vendedor", "fecha", "total")
+    list_display = ("pk", "vendedor", "fecha", "subtotal", "impuesto", "total")
     list_filter = ("fecha",)
+    readonly_fields = ("subtotal", "impuesto", "total")
     inlines = [ItemVentaInline]
 
 

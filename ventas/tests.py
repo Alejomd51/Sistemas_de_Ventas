@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from usuarios.models import Categoria, Producto, Usuario
 
-from .models import ItemVenta, Venta
+from .models import TASA_IVA, ItemVenta, Venta
 
 
 class VentaModelTests(TestCase):
@@ -14,7 +14,7 @@ class VentaModelTests(TestCase):
         producto = Producto.objects.create(
             nombre="Leche",
             descripcion="Leche entera",
-            precio=1.75,
+            precio=Decimal("1.75"),
             stock=20,
             categoria=categoria,
         )
@@ -41,6 +41,38 @@ class VentaModelTests(TestCase):
         venta = Venta.objects.create()
         self.assertIsNone(venta.vendedor)
         self.assertEqual(str(venta), f"Venta {venta.pk}")
+
+    def test_calcular_totales_con_impuestos(self):
+        """El método calcular_totales() calcula subtotal + IVA + total."""
+        categoria = Categoria.objects.create(nombre="Test")
+        producto = Producto.objects.create(
+            nombre="Producto A",
+            precio=Decimal("10.00"),
+            stock=100,
+            categoria=categoria,
+        )
+
+        venta = Venta.objects.create()
+        item = ItemVenta.objects.create(
+            venta=venta,
+            producto=producto,
+            cantidad=2,
+            precio_unitario=producto.precio,
+        )
+
+        venta.calcular_totales([item])
+
+        # subtotal = 2 * 10.00 = 20.00
+        self.assertEqual(venta.subtotal, Decimal("20.00"))
+        # impuesto = 20.00 * 0.15 = 3.00
+        expected_impuesto = (Decimal("20.00") * TASA_IVA).quantize(Decimal("0.01"))
+        self.assertEqual(venta.impuesto, expected_impuesto)
+        # total = subtotal + impuesto
+        self.assertEqual(venta.total, venta.subtotal + venta.impuesto)
+
+    def test_tasa_iva_porcentaje(self):
+        venta = Venta()
+        self.assertEqual(venta.tasa_iva_porcentaje, int(TASA_IVA * 100))
 
 
 def _formset_data(items, prefix="items"):
@@ -80,7 +112,7 @@ class VentaViewTests(TestCase):
             rol=Usuario.Rol.VENDEDOR,
         )
 
-    def test_vendedor_puede_registrar_una_venta_con_un_item(self):
+    def test_vendedor_puede_registrar_una_venta_con_impuestos(self):
         self.client.force_login(self.vendedor)
 
         data = _formset_data([
@@ -97,9 +129,16 @@ class VentaViewTests(TestCase):
 
         venta = Venta.objects.first()
         self.assertEqual(venta.items.count(), 1)
-        self.assertEqual(venta.total, Decimal("3.50"))
 
-    def test_vendedor_puede_registrar_venta_con_multiples_items(self):
+        # subtotal = 2 * 1.75 = 3.50
+        self.assertEqual(venta.subtotal, Decimal("3.50"))
+        # impuesto = 3.50 * 0.15 = 0.525 → 0.53 (redondeado)
+        expected_impuesto = (Decimal("3.50") * TASA_IVA).quantize(Decimal("0.01"))
+        self.assertEqual(venta.impuesto, expected_impuesto)
+        # total = subtotal + impuesto
+        self.assertEqual(venta.total, venta.subtotal + venta.impuesto)
+
+    def test_venta_multiples_items_calcula_impuestos_correctamente(self):
         self.client.force_login(self.vendedor)
 
         data = _formset_data([
@@ -120,8 +159,11 @@ class VentaViewTests(TestCase):
         self.assertEqual(self.producto.stock, 17)   # 20 - 3
         self.assertEqual(self.producto2.stock, 13)  # 15 - 2
 
-        # Total: (3 * 1.75) + (2 * 2.50) = 5.25 + 5.00 = 10.25
-        self.assertEqual(venta.total, Decimal("10.25"))
+        # subtotal = (3 * 1.75) + (2 * 2.50) = 5.25 + 5.00 = 10.25
+        self.assertEqual(venta.subtotal, Decimal("10.25"))
+        expected_impuesto = (Decimal("10.25") * TASA_IVA).quantize(Decimal("0.01"))
+        self.assertEqual(venta.impuesto, expected_impuesto)
+        self.assertEqual(venta.total, venta.subtotal + venta.impuesto)
 
     def test_vendedor_puede_listar_ventas(self):
         self.client.force_login(self.vendedor)
@@ -173,3 +215,23 @@ class VentaViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Venta.objects.exists())
+
+    def test_lista_ventas_muestra_desglose_impuestos(self):
+        """La lista de ventas muestra columnas de subtotal, IVA y total."""
+        self.client.force_login(self.vendedor)
+
+        # Crear una venta
+        data = _formset_data([
+            {"producto": self.producto.pk, "cantidad": 4},
+        ])
+        self.client.post(reverse("ventas:venta_crear"), data)
+
+        response = self.client.get(reverse("ventas:ventas"))
+
+        # Verificar que las columnas de desglose están presentes
+        self.assertContains(response, "Subtotal")
+        self.assertContains(response, "IVA")
+        self.assertContains(response, "Total")
+        # Verificar que hay datos de venta (el pk)
+        venta = Venta.objects.first()
+        self.assertContains(response, str(venta.pk))

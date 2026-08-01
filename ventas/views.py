@@ -35,8 +35,8 @@ def venta_crear(request):
                 for item in items:
                     item.precio_unitario = item.producto.precio
                     item.save()
-                venta.total = sum(item.subtotal for item in items)
-                venta.save(update_fields=["total"])
+                venta.calcular_totales(items)
+                venta.save(update_fields=["subtotal", "impuesto", "total"])
 
             messages.success(request, "Venta registrada correctamente")
             return redirect("ventas:ventas")

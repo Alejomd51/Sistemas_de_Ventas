@@ -1,5 +1,11 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.db import models
+
+
+# Tasa de IVA configurable desde settings; por defecto 15 % (Ecuador).
+TASA_IVA = Decimal(str(getattr(settings, "TASA_IVA", "0.15")))
 
 
 class Venta(models.Model):
@@ -12,14 +18,35 @@ class Venta(models.Model):
         verbose_name="vendedor",
     )
     fecha = models.DateTimeField(auto_now_add=True, verbose_name="fecha")
+    subtotal = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, verbose_name="subtotal"
+    )
+    impuesto = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, verbose_name="impuesto (IVA)"
+    )
     total = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0.0, verbose_name="total"
+        max_digits=10, decimal_places=2, default=0, verbose_name="total"
     )
 
     class Meta:
         verbose_name = "venta"
         verbose_name_plural = "ventas"
         ordering = ["-fecha"]
+
+    def calcular_totales(self, items=None):
+        """Calcula subtotal, impuesto y total a partir de los ítems."""
+        if items is None:
+            items = self.items.all()
+        self.subtotal = sum(
+            (item.subtotal for item in items), Decimal("0.00")
+        )
+        self.impuesto = (self.subtotal * TASA_IVA).quantize(Decimal("0.01"))
+        self.total = self.subtotal + self.impuesto
+
+    @property
+    def tasa_iva_porcentaje(self):
+        """Retorna la tasa de IVA como porcentaje entero (ej. 15)."""
+        return int(TASA_IVA * 100)
 
     def __str__(self):
         return f"Venta {self.pk}"

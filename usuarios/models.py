@@ -33,6 +33,12 @@ class Producto(models.Model):
         verbose_name = "producto"
         verbose_name_plural = "productos"
         ordering = ["nombre"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(stock__gte=0),
+                name="producto_stock_no_negativo",
+            ),
+        ]
 
     @property
     def precio_formateado(self):

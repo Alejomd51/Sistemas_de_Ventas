@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.test import TestCase
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
 from usuarios.models import Categoria, Producto, Usuario
 
@@ -73,6 +74,106 @@ class VentaModelTests(TestCase):
     def test_tasa_iva_porcentaje(self):
         venta = Venta()
         self.assertEqual(venta.tasa_iva_porcentaje, int(TASA_IVA * 100))
+
+    def test_no_permite_crear_item_sin_stock(self):
+        categoria = Categoria.objects.create(nombre="Stock limitado")
+        producto = Producto.objects.create(
+            nombre="Producto limitado",
+            precio=Decimal("2.00"),
+            stock=1,
+            categoria=categoria,
+        )
+        venta = Venta.objects.create()
+
+        with self.assertRaises(ValidationError):
+            ItemVenta.objects.create(
+                venta=venta,
+                producto=producto,
+                cantidad=2,
+                precio_unitario=producto.precio,
+            )
+
+        producto.refresh_from_db()
+        self.assertEqual(producto.stock, 1)
+
+    def test_editar_cantidad_ajusta_solo_la_diferencia(self):
+        categoria = Categoria.objects.create(nombre="Edición stock")
+        producto = Producto.objects.create(
+            nombre="Producto editable",
+            precio=Decimal("2.00"),
+            stock=10,
+            categoria=categoria,
+        )
+        venta = Venta.objects.create()
+        item = ItemVenta.objects.create(
+            venta=venta,
+            producto=producto,
+            cantidad=2,
+            precio_unitario=producto.precio,
+        )
+
+        item.cantidad = 5
+        item.save()
+        producto.refresh_from_db()
+        self.assertEqual(producto.stock, 5)
+
+        item.cantidad = 1
+        item.save()
+        producto.refresh_from_db()
+        self.assertEqual(producto.stock, 9)
+
+    def test_cambiar_producto_restaura_el_anterior(self):
+        categoria = Categoria.objects.create(nombre="Cambio producto")
+        anterior = Producto.objects.create(
+            nombre="Producto anterior", precio=Decimal("1.00"), stock=10, categoria=categoria
+        )
+        nuevo = Producto.objects.create(
+            nombre="Producto nuevo", precio=Decimal("2.00"), stock=8, categoria=categoria
+        )
+        venta = Venta.objects.create()
+        item = ItemVenta.objects.create(
+            venta=venta, producto=anterior, cantidad=3, precio_unitario=anterior.precio
+        )
+
+        item.producto = nuevo
+        item.cantidad = 2
+        item.precio_unitario = nuevo.precio
+        item.save()
+
+        anterior.refresh_from_db()
+        nuevo.refresh_from_db()
+        self.assertEqual(anterior.stock, 10)
+        self.assertEqual(nuevo.stock, 6)
+
+    def test_eliminar_item_restaura_stock(self):
+        categoria = Categoria.objects.create(nombre="Eliminar item")
+        producto = Producto.objects.create(
+            nombre="Producto eliminable", precio=Decimal("3.00"), stock=10, categoria=categoria
+        )
+        venta = Venta.objects.create()
+        item = ItemVenta.objects.create(
+            venta=venta, producto=producto, cantidad=4, precio_unitario=producto.precio
+        )
+
+        item.delete()
+
+        producto.refresh_from_db()
+        self.assertEqual(producto.stock, 10)
+
+    def test_eliminar_venta_restaura_stock_de_sus_items(self):
+        categoria = Categoria.objects.create(nombre="Eliminar venta")
+        producto = Producto.objects.create(
+            nombre="Producto de venta", precio=Decimal("3.00"), stock=10, categoria=categoria
+        )
+        venta = Venta.objects.create()
+        ItemVenta.objects.create(
+            venta=venta, producto=producto, cantidad=4, precio_unitario=producto.precio
+        )
+
+        venta.delete()
+
+        producto.refresh_from_db()
+        self.assertEqual(producto.stock, 10)
 
 
 def _formset_data(items, prefix="items"):

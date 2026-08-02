@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -29,17 +30,20 @@ def venta_crear(request):
         formset = ItemVentaFormSet(request.POST, instance=venta)
 
         if venta_form.is_valid() and formset.is_valid():
-            with transaction.atomic():
-                venta = venta_form.save()
-                items = formset.save(commit=False)
-                for item in items:
-                    item.precio_unitario = item.producto.precio
-                    item.save()
-                venta.calcular_totales(items)
-                venta.save(update_fields=["subtotal", "impuesto", "total"])
-
-            messages.success(request, "Venta registrada correctamente")
-            return redirect("ventas:ventas")
+            try:
+                with transaction.atomic():
+                    venta = venta_form.save()
+                    items = formset.save(commit=False)
+                    for item in items:
+                        item.precio_unitario = item.producto.precio
+                        item.save()
+                    venta.calcular_totales(items)
+                    venta.save(update_fields=["subtotal", "impuesto", "total"])
+            except ValidationError as error:
+                formset._non_form_errors = formset.error_class(error.messages)
+            else:
+                messages.success(request, "Venta registrada correctamente")
+                return redirect("ventas:ventas")
     else:
         venta = Venta()
         venta_form = VentaForm(instance=venta)

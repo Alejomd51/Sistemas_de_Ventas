@@ -1,7 +1,11 @@
 from decimal import Decimal
 
 from django.conf import settings
-from django.db import models
+from django.core.exceptions import ValidationError
+from django.db import models, transaction
+from django.db.models import F
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 
 # Tasa de IVA configurable desde settings; por defecto 15 % (Ecuador).
@@ -98,11 +102,80 @@ class ItemVenta(models.Model):
         return self.cantidad * self.precio_unitario
 
     def save(self, *args, **kwargs):
-        creating = self._state.adding
-        super().save(*args, **kwargs)
-        if creating:
-            self.producto.stock -= self.cantidad
-            self.producto.save(update_fields=["stock"])
+        if self.cantidad <= 0:
+            raise ValidationError("La cantidad debe ser mayor que cero.")
+
+        with transaction.atomic():
+            if self._state.adding:
+                producto = ProductoParaStock.bloquear(self.producto_id)
+                ProductoParaStock.validar_disponible(producto, self.cantidad)
+                ProductoParaStock.ajustar(producto.pk, -self.cantidad)
+            else:
+                anterior = ItemVenta.objects.select_for_update().get(pk=self.pk)
+                productos = ProductoParaStock.bloquear_varios(
+                    anterior.producto_id,
+                    self.producto_id,
+                )
+
+                if anterior.producto_id == self.producto_id:
+                    diferencia = self.cantidad - anterior.cantidad
+                    if diferencia > 0:
+                        ProductoParaStock.validar_disponible(
+                            productos[self.producto_id],
+                            diferencia,
+                        )
+                    ProductoParaStock.ajustar(self.producto_id, -diferencia)
+                else:
+                    ProductoParaStock.validar_disponible(
+                        productos[self.producto_id],
+                        self.cantidad,
+                    )
+                    ProductoParaStock.ajustar(
+                        anterior.producto_id,
+                        anterior.cantidad,
+                    )
+                    ProductoParaStock.ajustar(self.producto_id, -self.cantidad)
+
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.producto.nombre} x {self.cantidad}"
+
+
+class ProductoParaStock:
+    """Operaciones internas para actualizar inventario con bloqueo de filas."""
+
+    @staticmethod
+    def bloquear(producto_id):
+        from usuarios.models import Producto
+
+        return Producto.objects.select_for_update().get(pk=producto_id)
+
+    @classmethod
+    def bloquear_varios(cls, *producto_ids):
+        from usuarios.models import Producto
+
+        ids = sorted(set(producto_ids))
+        return {
+            producto.pk: producto
+            for producto in Producto.objects.select_for_update().filter(pk__in=ids)
+        }
+
+    @staticmethod
+    def validar_disponible(producto, cantidad):
+        if producto.stock < cantidad:
+            raise ValidationError(
+                f"Stock insuficiente para '{producto.nombre}'. "
+                f"Disponible: {producto.stock}."
+            )
+
+    @staticmethod
+    def ajustar(producto_id, cantidad):
+        from usuarios.models import Producto
+
+        Producto.objects.filter(pk=producto_id).update(stock=F("stock") + cantidad)
+
+
+@receiver(post_delete, sender=ItemVenta)
+def restaurar_stock_al_eliminar_item(sender, instance, **kwargs):
+    ProductoParaStock.ajustar(instance.producto_id, instance.cantidad)

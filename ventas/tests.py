@@ -193,6 +193,9 @@ def _formset_data(items, prefix="items"):
 
 class VentaViewTests(TestCase):
     def setUp(self):
+        # Las migraciones incluyen ventas demostrativas; cada prueba de vistas
+        # parte de un conjunto controlado para verificar únicamente sus datos.
+        Venta.objects.all().delete()
         self.categoria = Categoria.objects.create(nombre="Lácteos")
         self.producto = Producto.objects.create(
             nombre="Leche",

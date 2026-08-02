@@ -11,6 +11,8 @@ from ventas.models import ItemVenta, Venta
 
 class ReportesTests(TestCase):
     def setUp(self):
+        # Aislar los cálculos del reporte de las ventas demostrativas iniciales.
+        Venta.objects.all().delete()
         self.admin = Usuario.objects.create_user(
             username="admin-reportes",
             password="ClaveSegura2026!",

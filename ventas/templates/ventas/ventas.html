@@ -23,8 +23,12 @@
 <main>
     <h1>Ventas</h1>
     <div class="actions-bar">
-        <a href="{% url 'ventas:venta_crear' %}">+ Registrar venta</a> &nbsp;|&nbsp;
-        <a href="{% url 'usuarios:panel_vendedor' %}">← Volver al panel</a>
+        {% if user.rol == 'VENDEDOR' %}
+            <a href="{% url 'ventas:venta_crear' %}">+ Registrar venta</a> &nbsp;|&nbsp;
+            <a href="{% url 'usuarios:panel_vendedor' %}">← Volver al panel</a>
+        {% else %}
+            <a href="{% url 'usuarios:panel_admin' %}">← Volver al panel</a>
+        {% endif %}
     </div>
 
     {% if messages %}

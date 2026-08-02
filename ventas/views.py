@@ -1,5 +1,4 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -10,18 +9,18 @@ from .forms import ItemVentaFormSet, VentaForm
 from .models import Venta
 
 
-@login_required
-@rol_requerido(Usuario.Rol.VENDEDOR)
+@rol_requerido(Usuario.Rol.ADMIN, Usuario.Rol.VENDEDOR)
 def ventas(request):
     ventas_list = (
         Venta.objects.select_related("vendedor")
         .prefetch_related("items__producto")
         .all()
     )
+    if request.user.rol == Usuario.Rol.VENDEDOR:
+        ventas_list = ventas_list.filter(vendedor=request.user)
     return render(request, "ventas/ventas.html", {"ventas": ventas_list})
 
 
-@login_required
 @rol_requerido(Usuario.Rol.VENDEDOR)
 def venta_crear(request):
     if request.method == "POST":
@@ -49,13 +48,10 @@ def venta_crear(request):
     return render(request, "ventas/venta_form.html", {"formset": formset, "venta_form": venta_form})
 
 
-@login_required
-@rol_requerido(Usuario.Rol.VENDEDOR)
+@rol_requerido(Usuario.Rol.ADMIN, Usuario.Rol.VENDEDOR)
 def venta_comprobante(request, pk):
     venta = get_object_or_404(Venta.objects.prefetch_related("items__producto"), pk=pk)
     
-    # Validar que solo el propio vendedor (o un admin) pueda ver el comprobante, 
-    # aunque no fue explícitamente pedido, es una buena práctica de seguridad básica.
     if request.user.rol == Usuario.Rol.VENDEDOR and venta.vendedor != request.user:
         messages.error(request, "No tienes permiso para ver este comprobante.")
         return redirect("ventas:ventas")

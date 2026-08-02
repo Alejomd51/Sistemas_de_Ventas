@@ -111,6 +111,11 @@ class VentaViewTests(TestCase):
             password="ClaveSegura2026!",
             rol=Usuario.Rol.VENDEDOR,
         )
+        self.admin = Usuario.objects.create_user(
+            username="admin-ventas",
+            password="ClaveSegura2026!",
+            rol=Usuario.Rol.ADMIN,
+        )
 
     def test_vendedor_puede_registrar_una_venta_con_impuestos(self):
         self.client.force_login(self.vendedor)
@@ -173,6 +178,43 @@ class VentaViewTests(TestCase):
         response = self.client.get(reverse("ventas:ventas"))
 
         self.assertEqual(response.status_code, 200)
+
+    def test_vendedor_solo_lista_sus_propias_ventas(self):
+        otro_vendedor = Usuario.objects.create_user(
+            username="otro-listado",
+            password="ClaveSegura2026!",
+            rol=Usuario.Rol.VENDEDOR,
+        )
+        venta_propia = Venta.objects.create(vendedor=self.vendedor)
+        venta_ajena = Venta.objects.create(vendedor=otro_vendedor)
+        self.client.force_login(self.vendedor)
+
+        response = self.client.get(reverse("ventas:ventas"))
+
+        self.assertQuerySetEqual(response.context["ventas"], [venta_propia])
+        self.assertNotContains(response, f">{venta_ajena.pk}<")
+
+    def test_admin_puede_listar_todas_las_ventas(self):
+        otro_vendedor = Usuario.objects.create_user(
+            username="otro-admin",
+            password="ClaveSegura2026!",
+            rol=Usuario.Rol.VENDEDOR,
+        )
+        Venta.objects.create(vendedor=self.vendedor)
+        Venta.objects.create(vendedor=otro_vendedor)
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse("ventas:ventas"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["ventas"].count(), 2)
+
+    def test_admin_no_puede_registrar_ventas(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse("ventas:venta_crear"))
+
+        self.assertEqual(response.status_code, 403)
 
     def test_venta_asigna_vendedor_automaticamente(self):
         self.client.force_login(self.vendedor)
@@ -275,3 +317,12 @@ class VentaViewTests(TestCase):
         
         # Debe redirigir o prohibir
         self.assertRedirects(response, reverse("ventas:ventas"))
+
+    def test_admin_puede_ver_cualquier_comprobante(self):
+        venta = Venta.objects.create(vendedor=self.vendedor)
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse("ventas:venta_comprobante", args=[venta.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "COMPROBANTE DE VENTA")

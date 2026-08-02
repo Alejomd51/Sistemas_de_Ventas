@@ -37,3 +37,20 @@ def registro_rapido_cliente(request):
         form = ClienteForm()
     
     return render(request, 'clientes/form_modal.html', {'form': form})
+
+def historial_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, pk=cliente_id)
+    # Asumiendo que la App de ventas tiene un ForeignKey 'cliente' en el modelo Venta
+    ventas = cliente.venta_set.all().order_by('-fecha_venta') if hasattr(cliente, 'venta_set') else []
+    
+    # Cálculo de métricas del cliente
+    total_gastado = sum(v.total for v in ventas) if ventas else 0
+    total_compras = len(ventas) if ventas else 0
+
+    context = {
+        'cliente': cliente,
+        'ventas': ventas,
+        'total_gastado': total_gastado,
+        'total_compras': total_compras,
+    }
+    return render(request, 'clientes/historial.html', context)

@@ -1,10 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 
-from .forms import ProductoForm, RegistroUsuarioForm
+from .forms import RegistroUsuarioForm
 from .decorators import rol_requerido
-from .models import Producto, Usuario
+from .models import Usuario
 
 
 @login_required
@@ -20,64 +20,6 @@ def panel_admin(request):
 @rol_requerido(Usuario.Rol.VENDEDOR)
 def panel_vendedor(request):
     return render(request, "usuarios/panel_vendedor.html")
-
-
-@login_required
-@rol_requerido(Usuario.Rol.ADMIN)
-def productos(request):
-    productos_list = Producto.objects.select_related("categoria").all()
-    return render(request, "usuarios/productos.html", {"productos": productos_list})
-
-
-@login_required
-@rol_requerido(Usuario.Rol.ADMIN)
-def producto_crear(request):
-    if request.method == "POST":
-        form = ProductoForm(request.POST)
-        if form.is_valid():
-            producto = form.save()
-            messages.success(
-                request,
-                f"Producto '{producto.nombre}' creado correctamente.",
-            )
-            return redirect("usuarios:productos")
-    else:
-        form = ProductoForm()
-
-    return render(request, "usuarios/producto_form.html", {"form": form, "accion": "Crear"})
-
-
-@login_required
-@rol_requerido(Usuario.Rol.ADMIN)
-def producto_editar(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
-    if request.method == "POST":
-        form = ProductoForm(request.POST, instance=producto)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Producto actualizado correctamente.")
-            return redirect("usuarios:productos")
-    else:
-        form = ProductoForm(instance=producto)
-
-    return render(
-        request,
-        "usuarios/producto_form.html",
-        {"form": form, "accion": "Editar", "producto": producto},
-    )
-
-
-@login_required
-@rol_requerido(Usuario.Rol.ADMIN)
-def producto_eliminar(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
-    if request.method == "POST":
-        nombre = producto.nombre
-        producto.delete()
-        messages.success(request, f"Producto eliminado correctamente: {nombre}")
-        return redirect("usuarios:productos")
-
-    return render(request, "usuarios/producto_confirm_delete.html", {"producto": producto})
 
 
 def registro(request):

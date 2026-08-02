@@ -18,7 +18,7 @@
 <main>
     <h1>Productos</h1>
     <div class="actions">
-        <a href="{% url 'usuarios:producto_crear' %}">Crear producto</a> |
+        <a href="{% url 'productos:producto_crear' %}">Crear producto</a> |
         <a href="{% url 'usuarios:panel_admin' %}">Volver al panel</a>
     </div>
 
@@ -53,9 +53,9 @@
                         </td>
                         <td>{% if producto.activo %}Sí{% else %}No{% endif %}</td>
                         <td>
-                            <a href="{% url 'usuarios:producto_editar' producto.pk %}">Editar</a>
+                            <a href="{% url 'productos:producto_editar' producto.pk %}">Editar</a>
                             |
-                            <a href="{% url 'usuarios:producto_eliminar' producto.pk %}">Eliminar</a>
+                            <a href="{% url 'productos:producto_eliminar' producto.pk %}">Eliminar</a>
                         </td>
                     </tr>
                 {% endfor %}

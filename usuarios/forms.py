@@ -1,15 +1,7 @@
-from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 
-from .models import Producto, Usuario
-
-
-class ProductoForm(forms.ModelForm):
-
-    class Meta:
-        model = Producto
-        fields = ("nombre", "descripcion", "precio", "stock", "categoria", "activo")
+from .models import Usuario
 
 
 class RegistroUsuarioForm(UserCreationForm):

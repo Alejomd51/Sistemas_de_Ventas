@@ -4,7 +4,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from usuarios.models import Categoria, Producto, Usuario
+from productos.models import Categoria, Producto
+from usuarios.models import Usuario
 from ventas.models import ItemVenta, Venta
 
 

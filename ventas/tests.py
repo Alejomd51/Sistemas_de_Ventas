@@ -4,7 +4,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 
-from usuarios.models import Categoria, Producto, Usuario
+from productos.models import Categoria, Producto
+from usuarios.models import Usuario
 
 from .models import TASA_IVA, ItemVenta, Venta
 

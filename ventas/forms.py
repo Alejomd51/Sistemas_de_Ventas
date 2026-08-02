@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
-from usuarios.models import Producto
+from productos.models import Producto
 
 from .models import ItemVenta, Venta
 

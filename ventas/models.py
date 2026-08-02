@@ -83,7 +83,7 @@ class ItemVenta(models.Model):
         verbose_name="venta",
     )
     producto = models.ForeignKey(
-        "usuarios.Producto",
+        "productos.Producto",
         on_delete=models.PROTECT,
         related_name="items_venta",
         verbose_name="producto",
@@ -147,13 +147,13 @@ class ProductoParaStock:
 
     @staticmethod
     def bloquear(producto_id):
-        from usuarios.models import Producto
+        from productos.models import Producto
 
         return Producto.objects.select_for_update().get(pk=producto_id)
 
     @classmethod
     def bloquear_varios(cls, *producto_ids):
-        from usuarios.models import Producto
+        from productos.models import Producto
 
         ids = sorted(set(producto_ids))
         return {
@@ -171,7 +171,7 @@ class ProductoParaStock:
 
     @staticmethod
     def ajustar(producto_id, cantidad):
-        from usuarios.models import Producto
+        from productos.models import Producto
 
         Producto.objects.filter(pk=producto_id).update(stock=F("stock") + cantidad)
 

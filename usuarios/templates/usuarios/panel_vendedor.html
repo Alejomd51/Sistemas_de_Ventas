@@ -1,17 +1,3 @@
-<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de vendedor</title>
-</head>
-<body>
-<main>
-    <h1>Panel de vendedor</h1>
-    <p>Esta sección es exclusiva para usuarios vendedores.</p>
-    <p><a href="{% url 'ventas:ventas' %}">Gestionar ventas</a></p>
-    <p><a href="{% url 'clientes:lista' %}">Gestionar clientes</a></p>
-    <a href="{% url 'usuarios:inicio' %}">Volver al inicio</a>
-</main>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Ventas | Coffe, Love and Smoke{% endblock %}
+{% block content %}<h1 class="cafe-title">Panel de vendedor</h1><p class="cafe-subtitle">Atiende pedidos de café y productos para adultos con rapidez.</p><section class="cafe-grid"><a class="menu-card" href="{% url 'ventas:venta_crear' %}"><span class="menu-icon">＋</span><h3>Nueva venta</h3><p>Registra productos, cantidades y método de pago.</p></a><a class="menu-card" href="{% url 'ventas:ventas' %}"><span class="menu-icon">🧾</span><h3>Mis ventas</h3><p>Consulta tus transacciones y comprobantes.</p></a><a class="menu-card" href="{% url 'clientes:lista' %}"><span class="menu-icon">♥</span><h3>Clientes</h3><p>Busca, registra y consulta historiales.</p></a></section>{% endblock %}

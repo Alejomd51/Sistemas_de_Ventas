@@ -1,33 +1,3 @@
-<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Registro de usuarios</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }
-        main { max-width: 520px; margin: 40px auto; padding: 28px; background: white; border-radius: 10px; }
-        label { display: block; margin-top: 14px; font-weight: bold; }
-        input, select { box-sizing: border-box; width: 100%; padding: 9px; margin-top: 5px; }
-        button { width: 100%; margin-top: 20px; padding: 11px; border: 0; border-radius: 6px; background: #2563eb; color: white; cursor: pointer; }
-        .errorlist { color: #b91c1c; padding-left: 20px; }
-        .mensaje { padding: 12px; background: #dcfce7; color: #166534; border-radius: 6px; }
-        .helptext { display: block; margin-top: 4px; color: #555; font-size: .85rem; }
-    </style>
-</head>
-<body>
-<main>
-    <h1>Registrar usuario</h1>
-
-    {% for message in messages %}
-        <p class="mensaje">{{ message }}</p>
-    {% endfor %}
-
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Crear cuenta</button>
-    </form>
-</main>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Registro | Coffe, Love and Smoke{% endblock %}
+{% block content %}<section class="cafe-card auth-card"><h1 class="cafe-title">Registrar usuario</h1><p class="cafe-subtitle">Crea una cuenta para el equipo de la cafetería.</p><form method="post" class="cafe-form" novalidate>{% csrf_token %}{{ form.as_p }}<button class="btn-cafe" type="submit">Crear cuenta</button></form><p class="mt-3"><a href="{% url 'usuarios:login' %}">Ya tengo una cuenta</a></p></section>{% endblock %}

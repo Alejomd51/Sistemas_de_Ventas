@@ -1,30 +1,8 @@
-<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Inicio</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }
-        main { max-width: 680px; margin: 70px auto; padding: 28px; background: white; border-radius: 10px; }
-        button { padding: 10px 16px; border: 0; border-radius: 6px; background: #dc2626; color: white; cursor: pointer; }
-    </style>
-</head>
-<body>
-<main>
-    <h1>Bienvenido, {{ user.get_full_name|default:user.username }}</h1>
-    <p>Has iniciado sesión como <strong>{{ user.get_rol_display }}</strong>.</p>
-
-    {% if user.rol == 'ADMIN' %}
-        <p><a href="{% url 'usuarios:panel_admin' %}">Ir al panel de administrador</a></p>
-    {% elif user.rol == 'VENDEDOR' %}
-        <p><a href="{% url 'usuarios:panel_vendedor' %}">Ir al panel de vendedor</a></p>
-    {% endif %}
-
-    <form method="post" action="{% url 'usuarios:logout' %}">
-        {% csrf_token %}
-        <button type="submit">Cerrar sesión</button>
-    </form>
-</main>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Inicio | Coffe, Love and Smoke{% endblock %}
+{% block hero %}<div class="container cafe-hero"><h1>Coffe, Love<br><span>and Smoke</span></h1><p>Café de calidad, ambiente para adultos y control completo de cada venta.</p></div>{% endblock %}
+{% block content %}
+<section class="cafe-card"><h2 class="cafe-title">Bienvenido, {{ user.get_full_name|default:user.username }}</h2><p class="cafe-subtitle">Has iniciado sesión como <strong>{{ user.get_rol_display }}</strong>.</p>
+{% if user.rol == 'ADMIN' %}<a class="btn-cafe" href="{% url 'usuarios:panel_admin' %}">Abrir panel de administrador</a>{% else %}<a class="btn-cafe" href="{% url 'usuarios:panel_vendedor' %}">Abrir panel de vendedor</a>{% endif %}</section>
+<section class="cafe-grid"><article class="menu-card"><span class="menu-icon">☕</span><h3>Café y bebidas</h3><p>Controla granos, bebidas y acompañamientos.</p></article><article class="menu-card"><span class="menu-icon">🚬</span><h3>Zona Smoke</h3><p>Catálogo de tabaco reservado para mayores de edad.</p></article><article class="menu-card"><span class="menu-icon">♥</span><h3>Love</h3><p>Atención cercana e historial de nuestros clientes.</p></article></section>
+{% endblock %}

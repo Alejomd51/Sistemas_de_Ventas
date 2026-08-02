@@ -1,0 +1,71 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Coffe, Love and Smoke{% endblock %}</title>
+    <meta name="description" content="Sistema de ventas de Coffe, Love and Smoke">
+    <link rel="stylesheet" href="{% static 'coffo/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'coffo/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cafe.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="cafe-body">
+    <header class="cafe-header">
+        <nav class="navbar navbar-expand-lg navbar-dark container">
+            <a class="navbar-brand cafe-brand" href="{% url 'inicio' %}">
+                <span class="brand-cup">☕</span>
+                <span>Coffe, Love <em>and Smoke</em></span>
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ml-auto align-items-lg-center">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'usuarios:inicio' %}">Inicio</a></li>
+                        {% if user.rol == 'ADMIN' %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'productos:productos' %}">Productos</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'clientes:lista' %}">Clientes</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'ventas:ventas' %}">Ventas</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'reportes:ventas_periodo' %}">Reportes</a></li>
+                        {% else %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'ventas:ventas' %}">Ventas</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'clientes:lista' %}">Clientes</a></li>
+                        {% endif %}
+                        <li class="nav-item ml-lg-2">
+                            <form method="post" action="{% url 'usuarios:logout' %}">
+                                {% csrf_token %}<button class="nav-logout" type="submit">Salir</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'usuarios:login' %}">Ingresar</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'usuarios:registro' %}">Registrarse</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+        {% block hero %}{% endblock %}
+    </header>
+
+    <main class="container cafe-main">
+        {% for message in messages %}
+            <div class="cafe-alert {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="cafe-footer">
+        <div class="container footer-grid">
+            <div><strong>Coffe, Love and Smoke</strong><p>Café, conversación y una zona exclusiva para adultos fumadores.</p></div>
+            <div><strong>Catálogo</strong><p>Cafés, bebidas, acompañamientos y cigarrillos para mayores de edad.</p></div>
+            <div><strong>Uso responsable</strong><p>Venta de tabaco únicamente a mayores de 18 años.</p></div>
+        </div>
+        <p class="copyright">Sistema de ventas · Coffe, Love and Smoke</p>
+    </footer>
+    <script src="{% static 'coffo/js/jquery.min.js' %}"></script>
+    <script src="{% static 'coffo/js/bootstrap.bundle.min.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

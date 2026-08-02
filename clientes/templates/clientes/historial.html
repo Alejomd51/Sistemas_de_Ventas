@@ -1,27 +1,20 @@
-<!doctype html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Historial de cliente</title></head>
-<body>
-<main>
-    <h1>Historial de {{ cliente.nombres }} {{ cliente.apellidos }}</h1>
-    <p>Total de compras: {{ total_compras }}</p>
-    <p>Total gastado: ${{ total_gastado|floatformat:2 }}</p>
-    <table>
+{% extends 'base.html' %}
+{% block title %}Historial de {{ cliente.nombres }}{% endblock %}
+{% block content %}
+<h1 class="cafe-title">Historial de {{ cliente.nombres }} {{ cliente.apellidos }}</h1>
+<div class="cafe-grid mb-4">
+    <div class="metric"><span>Total de compras: {{ total_compras }}</span><strong>{{ total_compras }}</strong></div>
+    <div class="metric">Total gastado<strong>${{ total_gastado|floatformat:2 }}</strong></div>
+</div>
+<section class="cafe-card table-wrap">
+    <table class="cafe-table">
         <thead><tr><th>Venta</th><th>Fecha</th><th>Vendedor</th><th>Total</th></tr></thead>
         <tbody>
         {% for venta in ventas %}
-            <tr>
-                <td>#{{ venta.pk }}</td>
-                <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
-                <td>{{ venta.vendedor|default:"—" }}</td>
-                <td>${{ venta.total|floatformat:2 }}</td>
-            </tr>
-        {% empty %}
-            <tr><td colspan="4">Este cliente todavía no tiene compras.</td></tr>
-        {% endfor %}
+            <tr><td>#{{ venta.pk }}</td><td>{{ venta.fecha|date:'d/m/Y H:i' }}</td><td>{{ venta.vendedor|default:'—' }}</td><td>${{ venta.total|floatformat:2 }}</td></tr>
+        {% empty %}<tr><td colspan="4">Este cliente todavía no tiene compras.</td></tr>{% endfor %}
         </tbody>
     </table>
-    <a href="{% url 'clientes:lista' %}">Volver a clientes</a>
-</main>
-</body>
-</html>
+    <div class="cafe-actions"><a class="btn-outline-cafe" href="{% url 'clientes:lista' %}">Volver a clientes</a></div>
+</section>
+{% endblock %}

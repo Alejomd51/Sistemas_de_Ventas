@@ -1,20 +1,9 @@
-<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de administrador</title>
-</head>
-<body>
-<main>
-    <h1>Panel de administrador</h1>
-    <p>Esta sección es exclusiva para usuarios administradores.</p>
-    <p><a href="{% url 'productos:productos' %}">Gestionar productos</a></p>
-    <p><a href="{% url 'clientes:lista' %}">Gestionar clientes</a></p>
-    <p><a href="{% url 'ventas:ventas' %}">Consultar ventas</a></p>
-    <p><a href="{% url 'reportes:ventas_periodo' %}">Reporte de ventas</a></p>
-    <p><a href="{% url 'reportes:top_productos' %}">Productos más vendidos</a></p>
-    <a href="{% url 'usuarios:inicio' %}">Volver al inicio</a>
-</main>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Administración | Coffe, Love and Smoke{% endblock %}
+{% block content %}<h1 class="cafe-title">Panel de administrador</h1><p class="cafe-subtitle">Control general de la cafetería y su zona para fumadores.</p><section class="cafe-grid">
+<a class="menu-card" href="{% url 'productos:productos' %}"><span class="menu-icon">☕</span><h3>Productos e inventario</h3><p>Cafés, cigarrillos, precios y existencias.</p></a>
+<a class="menu-card" href="{% url 'clientes:lista' %}"><span class="menu-icon">♥</span><h3>Clientes</h3><p>Datos de contacto e historial de compras.</p></a>
+<a class="menu-card" href="{% url 'ventas:ventas' %}"><span class="menu-icon">🧾</span><h3>Ventas</h3><p>Consulta transacciones y comprobantes.</p></a>
+<a class="menu-card" href="{% url 'reportes:ventas_periodo' %}"><span class="menu-icon">📈</span><h3>Reporte de ventas</h3><p>Resultados por rango de fechas.</p></a>
+<a class="menu-card" href="{% url 'reportes:top_productos' %}"><span class="menu-icon">🏆</span><h3>Más vendidos</h3><p>Preferencias e ingresos por producto.</p></a>
+</section>{% endblock %}

@@ -5,4 +5,5 @@ db.sqlite3
 .env
 .idea/
 .vscode/
-
+Coffo-1.0.0/
+staticfiles/

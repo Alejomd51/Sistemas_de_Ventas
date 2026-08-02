@@ -1,15 +1,1 @@
-<!doctype html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Registrar cliente</title></head>
-<body>
-<main>
-    <h1>Registrar cliente</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar cliente</button>
-    </form>
-    <a href="{% url 'clientes:lista' %}">Volver a clientes</a>
-</main>
-</body>
-</html>
+{% extends 'base.html' %}{% block title %}Registrar cliente{% endblock %}{% block content %}<section class="cafe-card auth-card"><h1 class="cafe-title">Registrar cliente</h1><p class="cafe-subtitle">Datos de contacto para compras e historial.</p><form method="post" class="cafe-form">{% csrf_token %}{{ form.as_p }}<div class="cafe-actions"><button class="btn-cafe" type="submit">Guardar cliente</button><a class="btn-outline-cafe" href="{% url 'clientes:lista' %}">Cancelar</a></div></form></section>{% endblock %}

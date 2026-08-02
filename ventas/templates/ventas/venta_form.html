@@ -194,6 +194,14 @@
         {% csrf_token %}
 
         <div style="margin-bottom: 20px;">
+            <label for="{{ venta_form.cliente.id_for_label }}" style="font-weight: 600; display: block; margin-bottom: 6px;">
+                {{ venta_form.cliente.label }}
+            </label>
+            {{ venta_form.cliente }}
+            <small><a href="{% url 'clientes:registro_rapido' %}" target="_blank">Registrar cliente nuevo</a></small>
+        </div>
+
+        <div style="margin-bottom: 20px;">
             <label for="{{ venta_form.metodo_pago.id_for_label }}" style="font-weight: 600; display: block; margin-bottom: 6px;">
                 {{ venta_form.metodo_pago.label }}
             </label>

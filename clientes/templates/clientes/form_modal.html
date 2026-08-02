@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Registrar cliente</title></head>
+<body>
+<main>
+    <h1>Registrar cliente</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Guardar cliente</button>
+    </form>
+    <a href="{% url 'clientes:lista' %}">Volver a clientes</a>
+</main>
+</body>
+</html>

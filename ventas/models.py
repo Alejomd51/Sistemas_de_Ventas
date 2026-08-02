@@ -22,6 +22,14 @@ class Venta(models.Model):
         related_name="ventas",
         verbose_name="vendedor",
     )
+    cliente = models.ForeignKey(
+        "clientes.Cliente",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="ventas",
+        verbose_name="cliente",
+    )
     metodo_pago = models.CharField(
         max_length=20,
         choices=MetodoPago.choices,

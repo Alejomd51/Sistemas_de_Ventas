@@ -9,8 +9,9 @@ from .models import ItemVenta, Venta
 class VentaForm(forms.ModelForm):
     class Meta:
         model = Venta
-        fields = ("metodo_pago",)
+        fields = ("cliente", "metodo_pago")
         widgets = {
+            "cliente": forms.Select(attrs={"class": "form-select"}),
             "metodo_pago": forms.Select(attrs={"class": "form-select"}),
         }
 

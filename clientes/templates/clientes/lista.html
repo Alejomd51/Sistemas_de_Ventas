@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Clientes</title></head>
+<body>
+<main>
+    <h1>Clientes</h1>
+    <form method="get">
+        <input type="search" name="q" value="{{ query }}" placeholder="Identificación, nombres o apellidos">
+        <button type="submit">Buscar</button>
+    </form>
+    <p><a href="{% url 'clientes:registro_rapido' %}">Registrar cliente</a></p>
+    <table>
+        <thead><tr><th>Identificación</th><th>Cliente</th><th>Correo</th><th>Acciones</th></tr></thead>
+        <tbody>
+        {% for cliente in clientes %}
+            <tr>
+                <td>{{ cliente.identificacion }}</td>
+                <td>{{ cliente.nombres }} {{ cliente.apellidos }}</td>
+                <td>{{ cliente.email|default:"—" }}</td>
+                <td><a href="{% url 'clientes:historial' cliente.pk %}">Ver historial</a></td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4">No se encontraron clientes.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <p><a href="{% url 'usuarios:inicio' %}">Volver al inicio</a></p>
+</main>
+</body>
+</html>

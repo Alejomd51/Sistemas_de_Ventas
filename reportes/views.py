@@ -1,27 +1,30 @@
+from django.db.models import Count, DecimalField, F, Sum
+from django.db.models.functions import TruncDate
 from django.shortcuts import render
-from django.db.models import Sum, Count
-from django.db.models.functions import TruncDay
+from django.utils import timezone
 from django.utils.dateparse import parse_date
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-# Importamos los modelos de la app de ventas
-# (Asegúrate de importar ItemVenta para el Paso 5)
+from usuarios.decorators import rol_requerido
+from usuarios.models import Usuario
 from ventas.models import Venta, ItemVenta
 
+
+@rol_requerido(Usuario.Rol.ADMIN)
 def reporte_ventas_periodo(request):
     fecha_inicio_str = request.GET.get('fecha_inicio')
     fecha_fin_str = request.GET.get('fecha_fin')
 
     # Rango por defecto: últimos 30 días
-    hoy = datetime.now().date()
+    hoy = timezone.localdate()
     fecha_inicio = parse_date(fecha_inicio_str) if fecha_inicio_str else hoy - timedelta(days=30)
     fecha_fin = parse_date(fecha_fin_str) if fecha_fin_str else hoy
 
-    ventas = Venta.objects.filter(fecha_venta__date__range=[fecha_inicio, fecha_fin])
+    ventas = Venta.objects.filter(fecha__date__range=[fecha_inicio, fecha_fin])
 
     # Agregación por día usando Django ORM
     ventas_por_dia = (
-        ventas.annotate(dia=TruncDay('fecha_venta'))
+        ventas.annotate(dia=TruncDate('fecha'))
         .values('dia')
         .annotate(total_ventas=Sum('total'), cantidad_ordenes=Count('id'))
         .order_by('dia')
@@ -39,22 +42,30 @@ def reporte_ventas_periodo(request):
     }
     return render(request, 'reportes/ventas_periodo.html', context)
 
+
+@rol_requerido(Usuario.Rol.ADMIN)
 def dashboard_productos_mas_vendidos(request):
     # Top 10 productos más vendidos
     top_productos = (
         ItemVenta.objects.values('producto__nombre')
-        .annotate(total_vendido=Sum('cantidad'), ingresos=Sum('subtotal'))
+        .annotate(
+            total_vendido=Sum('cantidad'),
+            ingresos=Sum(
+                F('cantidad') * F('precio_unitario'),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            ),
+        )
         .order_by('-total_vendido')[:10]
     )
 
-    labels = [p['producto__nombre'] for p in top_productos]
-    data_cantidades = [p['total_vendido'] for p in top_productos]
-    data_ingresos = [float(p['ingresos']) for p in top_productos]
+    top_productos = list(top_productos)
+    max_vendido = max((p['total_vendido'] for p in top_productos), default=0)
+    for producto in top_productos:
+        producto['porcentaje'] = (
+            round(producto['total_vendido'] * 100 / max_vendido) if max_vendido else 0
+        )
 
     context = {
         'top_productos': top_productos,
-        'chart_labels': labels,
-        'chart_cantidades': data_cantidades,
-        'chart_ingresos': data_ingresos,
     }
     return render(request, 'reportes/top_productos.html', context)

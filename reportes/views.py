@@ -4,8 +4,9 @@ from django.db.models.functions import TruncDay
 from django.utils.dateparse import parse_date
 from datetime import datetime, timedelta
 
-# Importa los modelos desde la app de ventas de Alejandro Molina
-from ventas.models import Venta
+# Importamos los modelos de la app de ventas
+# (Asegúrate de importar ItemVenta para el Paso 5)
+from ventas.models import Venta, ItemVenta
 
 def reporte_ventas_periodo(request):
     fecha_inicio_str = request.GET.get('fecha_inicio')
@@ -37,3 +38,23 @@ def reporte_ventas_periodo(request):
         'total_transacciones': total_transacciones,
     }
     return render(request, 'reportes/ventas_periodo.html', context)
+
+def dashboard_productos_mas_vendidos(request):
+    # Top 10 productos más vendidos
+    top_productos = (
+        ItemVenta.objects.values('producto__nombre')
+        .annotate(total_vendido=Sum('cantidad'), ingresos=Sum('subtotal'))
+        .order_by('-total_vendido')[:10]
+    )
+
+    labels = [p['producto__nombre'] for p in top_productos]
+    data_cantidades = [p['total_vendido'] for p in top_productos]
+    data_ingresos = [float(p['ingresos']) for p in top_productos]
+
+    context = {
+        'top_productos': top_productos,
+        'chart_labels': labels,
+        'chart_cantidades': data_cantidades,
+        'chart_ingresos': data_ingresos,
+    }
+    return render(request, 'reportes/top_productos.html', context)

@@ -80,6 +80,16 @@ class AutenticacionTests(TestCase):
 
         self.assertRedirects(response, reverse("usuarios:login"))
 
+    def test_logo_enlaza_al_inicio_del_usuario(self):
+        self.client.force_login(self.usuario)
+
+        response = self.client.get(reverse("usuarios:inicio"))
+
+        self.assertContains(
+            response,
+            f'href="{reverse("usuarios:inicio")}"',
+        )
+
     def test_usuario_puede_iniciar_sesion(self):
         response = self.client.post(
             reverse("usuarios:login"),
